@@ -1,0 +1,8 @@
+{
+  "name": "haze",
+  "version": "0.0.1",
+  "dependencies": {
+    "fileset": "~0.1.5"
+  },
+  "devDependencies": {}
+}
