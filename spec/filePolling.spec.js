@@ -85,4 +85,35 @@ describe('Test file polling backend.', function () {
 
   });
 
+  it('should return a list of watched files', function () {
+
+    var done = false;
+    var testFile;
+    var test2File;
+
+    testFile = createFile('test.js');
+
+    poller.on('added', function (file) {
+      var watched = poller.watched();
+      expect(watched.length).toEqual(2);
+      expect(watched).toContain(test2File);
+      expect(watched).toContain(testFile);
+      done = true;
+    });
+
+    poller.add(join(rootDir, '**/*.js'), function (p) {
+
+      var watched = p.watched();
+      expect(watched.length).toEqual(1);
+      expect(watched).toContain(testFile);
+
+      test2File = createFile('test2.js');
+    });
+
+    waitsFor(function () {
+      return done;
+    }, 500);
+
+  });
+
 });
