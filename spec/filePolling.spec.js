@@ -2,13 +2,14 @@
 
 describe('Test file polling backend.', function () {
 
-  var FilePolling = require('../lib/backends/filePolling').FilePolling;
   var fs = require('fs');
   var path = require('path');
   var rimraf = require('rimraf').sync;
 
+  var FilePolling = require('../lib/backends/filePolling').FilePolling;
+  var backendApi = require('./backendApi');
+
   var rootDir = 'root_test_watched';
-  var poller;
 
   var clearWatchedDir = function () {
     if (fs.existsSync(rootDir)) {
@@ -16,104 +17,21 @@ describe('Test file polling backend.', function () {
     }
   };
 
-  var createFile = function (file) {
-    var ret = path.join(rootDir, file);
-
-    if (!fs.existsSync(rootDir)) {
-      fs.mkdirSync(rootDir);
-    }
-
-    fs.openSync(ret, 'w');
-    return ret;
-  };
-
-  var join = path.join;
-
   beforeEach(function () {
+    backendApi.rootDir(rootDir);
     clearWatchedDir();
-    poller = new FilePolling();
   });
 
   afterEach(function () {
-    poller.close();
     clearWatchedDir();
   });
 
-  it('should be able to be constructed with a pattern', function () {
+  it('should be able to be constructed with a pattern', backendApi.testConstructor(FilePolling));
 
-    var done = false;
-    var test2File;
+  it('should be able to add a pattern after construction', backendApi.testAdd(FilePolling));
 
-    createFile('test.js');
+  it('should return watched files', backendApi.testWatch(FilePolling));
 
-    new FilePolling(join(rootDir, '**/*.js'), function(p) {
-
-      p.on('added', function (file) {
-        expect(file).toEqual(test2File);
-        done = true;
-        p.close();
-      });
-
-      test2File = createFile('test2.js');
-    });
-
-    waitsFor(function () {
-      return done;
-    }, 500);
-
-  });
-
-  it('should be able to add a pattern after construction', function () {
-
-    var done = false;
-    var test2File;
-
-    poller.on('added', function (file) {
-      expect(file).toEqual(test2File);
-      done = true;
-    });
-
-    createFile('test.js');
-
-    poller.add(join(rootDir, '**/*.js'), function (p) {
-      test2File = createFile('test2.js');
-    });
-
-    waitsFor(function () {
-      return done;
-    }, 500);
-
-  });
-
-  it('should return a list of watched files', function () {
-
-    var done = false;
-    var testFile;
-    var test2File;
-
-    testFile = createFile('test.js');
-
-    poller.on('added', function (file) {
-      var watched = poller.watched();
-      expect(watched.length).toEqual(2);
-      expect(watched).toContain(test2File);
-      expect(watched).toContain(testFile);
-      done = true;
-    });
-
-    poller.add(join(rootDir, '**/*.js'), function (p) {
-
-      var watched = p.watched();
-      expect(watched.length).toEqual(1);
-      expect(watched).toContain(testFile);
-
-      test2File = createFile('test2.js');
-    });
-
-    waitsFor(function () {
-      return done;
-    }, 500);
-
-  });
+  it('should be able to remove a pattern', backendApi.testRemove(FilePolling));
 
 });
